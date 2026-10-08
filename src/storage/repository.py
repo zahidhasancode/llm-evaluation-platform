@@ -5,6 +5,7 @@ Provides session-based data access for requests, responses, and evaluations.
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Optional
@@ -20,6 +21,21 @@ class RepositoryError(Exception):
     """Raised when a repository operation fails due to a database error."""
 
     pass
+
+
+def _as_uuid(value: uuid.UUID | str) -> uuid.UUID:
+    """
+    Normalise an id to uuid.UUID.
+
+    The UUID columns use as_uuid=True. PostgreSQL drivers accept strings, but
+    SQLAlchemy's non-native UUID handling (e.g. SQLite) requires UUID objects.
+    """
+    if isinstance(value, uuid.UUID):
+        return value
+    try:
+        return uuid.UUID(str(value))
+    except ValueError as e:
+        raise RepositoryError(f"Invalid UUID: {value!r}") from e
 
 
 def insert_llm_request(
@@ -76,7 +92,7 @@ def insert_llm_request(
 def insert_llm_response(
     session: Session,
     *,
-    request_id: str,
+    request_id: uuid.UUID | str,
     output_text: Optional[str] = None,
     input_token_count: Optional[int] = None,
     output_token_count: Optional[int] = None,
@@ -92,7 +108,7 @@ def insert_llm_response(
 
     Args:
         session: SQLAlchemy session. Caller owns transaction lifecycle.
-        request_id: UUID of the LLMRequest this response belongs to.
+        request_id: UUID (or UUID string) of the LLMRequest this response belongs to.
         output_text: Model output text. Optional for failed requests.
         input_token_count: Number of input tokens.
         output_token_count: Number of output tokens.
@@ -109,9 +125,10 @@ def insert_llm_response(
     Raises:
         RepositoryError: If the insert fails (e.g. FK violation, check constraint).
     """
+    request_uuid = _as_uuid(request_id)
     try:
         response = LLMResponse(
-            request_id=request_id,
+            request_id=request_uuid,
             output_text=output_text,
             input_token_count=input_token_count,
             output_token_count=output_token_count,
@@ -163,8 +180,8 @@ def insert_evaluation_results(
                     "Each result must have at least one of 'score' or 'outcome'"
                 )
             ev = LLMEvaluation(
-                response_id=r["response_id"],
-                evaluation_run_id=r["evaluation_run_id"],
+                response_id=_as_uuid(r["response_id"]),
+                evaluation_run_id=_as_uuid(r["evaluation_run_id"]),
                 criterion_name=r["criterion_name"],
                 criterion_version=r.get("criterion_version"),
                 score=r.get("score"),
