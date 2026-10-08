@@ -15,9 +15,14 @@ from sqlalchemy.orm import Session
 from core.metrics import (
     compute_metrics,
     metrics_to_dict,
+    records_from_evaluations,
     records_from_request_response_pairs,
 )
-from storage.repository import RepositoryError, fetch_requests_and_responses_by_time_range
+from storage.repository import (
+    RepositoryError,
+    fetch_evaluations_for_responses,
+    fetch_requests_and_responses_by_time_range,
+)
 
 from .logs import get_db
 
@@ -92,6 +97,8 @@ def get_metrics(
     Return aggregated metrics for logged requests in the given time range.
 
     Optional filters: model_name, model_version, prompt_name, prompt_version.
+    average_evaluation_score is the mean of all numeric evaluation scores stored
+    for the matching responses (null when there are none).
     """
     try:
         start = _parse_datetime(start_time)
@@ -118,6 +125,9 @@ def get_metrics(
             prompt_name=prompt_name,
             prompt_version=prompt_version,
         )
+        evaluations = fetch_evaluations_for_responses(
+            db, response_ids=[resp.id for _, resp in pairs]
+        )
     except RepositoryError as e:
         raise HTTPException(
             status_code=500,
@@ -125,7 +135,7 @@ def get_metrics(
         ) from e
 
     records = records_from_request_response_pairs(pairs)
-    aggregated = compute_metrics(records)
+    aggregated = compute_metrics(records, records_from_evaluations(evaluations))
     data = metrics_to_dict(aggregated)
 
     return MetricsResponse(

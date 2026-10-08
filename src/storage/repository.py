@@ -258,6 +258,34 @@ def fetch_requests_and_responses_by_time_range(
         raise RepositoryError("Fetch failed: database error") from e
 
 
+def fetch_evaluations_for_responses(
+    session: Session,
+    *,
+    response_ids: list[uuid.UUID | str],
+) -> list[LLMEvaluation]:
+    """
+    Fetch all evaluation results stored for the given responses.
+
+    Args:
+        session: SQLAlchemy session.
+        response_ids: Response ids (UUID or UUID string). Empty list returns [].
+
+    Returns:
+        List of LLMEvaluation rows, in no particular order.
+
+    Raises:
+        RepositoryError: If an id is not a UUID or the query fails.
+    """
+    if not response_ids:
+        return []
+    ids = [_as_uuid(r) for r in response_ids]
+    try:
+        stmt = select(LLMEvaluation).where(LLMEvaluation.response_id.in_(ids))
+        return list(session.scalars(stmt).all())
+    except SQLAlchemyError as e:
+        raise RepositoryError("Fetch failed: database error") from e
+
+
 def aggregate_metrics(
     session: Session,
     *,

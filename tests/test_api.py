@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 
 import api.metrics
 from storage.models import LLMRequest, LLMResponse
-from storage.repository import RepositoryError
+from storage.repository import RepositoryError, insert_evaluation_results
 
 
 def log_body(**overrides) -> dict:
@@ -173,3 +173,31 @@ def test_metrics_reports_database_errors(
     assert res.status_code == 500
     assert res.json()["detail"]["error"] == "database_error"
 
+
+
+def test_metrics_include_stored_evaluation_scores(
+    client: TestClient, session_factory: sessionmaker
+) -> None:
+    first = client.post("/logs", json=log_body()).json()
+    second = client.post("/logs", json=log_body()).json()
+    other = client.post("/logs", json=log_body(prompt_version="v9")).json()
+    run_id = str(uuid.uuid4())
+    with session_factory() as s:
+        insert_evaluation_results(
+            s,
+            results=[
+                {"response_id": first["response_id"], "evaluation_run_id": run_id,
+                 "criterion_name": "llm_judge", "score": 4.0},
+                {"response_id": second["response_id"], "evaluation_run_id": run_id,
+                 "criterion_name": "llm_judge", "score": 3.0},
+                {"response_id": second["response_id"], "evaluation_run_id": run_id,
+                 "criterion_name": "empty_response", "outcome": "pass"},
+                {"response_id": other["response_id"], "evaluation_run_id": run_id,
+                 "criterion_name": "llm_judge", "score": 0.0},
+            ],
+        )
+        s.commit()
+
+    body = client.get("/metrics", params={**window(), "prompt_version": "v2"}).json()
+    assert body["request_count"] == 2
+    assert body["average_evaluation_score"] == pytest.approx(3.5)

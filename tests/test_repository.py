@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from storage.models import LLMEvaluation, LLMRequest, LLMResponse
 from storage.repository import (
     RepositoryError,
+    fetch_evaluations_for_responses,
     fetch_requests_and_responses_by_time_range,
     insert_evaluation_results,
     insert_llm_request,
@@ -187,3 +188,22 @@ def test_evaluation_for_unknown_response_is_rejected(session: Session) -> None:
             results=[{"response_id": uuid.uuid4(), "evaluation_run_id": uuid.uuid4(),
                       "criterion_name": "x", "score": 1}],
         )
+
+
+def test_fetch_evaluations_for_responses(session: Session) -> None:
+    _, wanted = add_pair(session)
+    _, other = add_pair(session)
+    run_id = uuid.uuid4()
+    insert_evaluation_results(
+        session,
+        results=[
+            {"response_id": wanted.id, "evaluation_run_id": run_id, "criterion_name": "a", "score": 1},
+            {"response_id": wanted.id, "evaluation_run_id": run_id, "criterion_name": "b", "outcome": "fail"},
+            {"response_id": other.id, "evaluation_run_id": run_id, "criterion_name": "a", "score": 0},
+        ],
+    )
+    session.commit()
+
+    rows = fetch_evaluations_for_responses(session, response_ids=[str(wanted.id)])
+    assert sorted(r.criterion_name for r in rows) == ["a", "b"]
+    assert fetch_evaluations_for_responses(session, response_ids=[]) == []
