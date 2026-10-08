@@ -123,13 +123,15 @@ def test_json_reports_parse_position() -> None:
 
 
 def test_json_schema_pass() -> None:
-    result = JsonSchemaEvaluator(SCHEMA).evaluate(make_input('{"answer": "yes", "confidence": 0.9}'))
+    output = '{"answer": "yes", "confidence": 0.9}'
+    result = JsonSchemaEvaluator(SCHEMA).evaluate(make_input(output))
     assert (result.score, result.outcome) == (1.0, "pass")
     assert result.details["schema_validated"] is True
 
 
 def test_json_schema_rejects_valid_json_that_breaks_schema() -> None:
-    result = JsonSchemaEvaluator(SCHEMA).evaluate(make_input('{"answer": "yes", "confidence": "high"}'))
+    output = '{"answer": "yes", "confidence": "high"}'
+    result = JsonSchemaEvaluator(SCHEMA).evaluate(make_input(output))
     assert (result.score, result.outcome) == (0.0, "fail")
     assert result.details["path"] == ["confidence"]
 
@@ -147,7 +149,12 @@ def test_json_schema_invalid_schema_raises() -> None:
 
 @pytest.mark.parametrize(
     "evaluator",
-    [LengthEvaluator(1, 3), EmptyResponseEvaluator(), JsonSchemaEvaluator(), JsonSchemaEvaluator(SCHEMA)],
+    [
+        LengthEvaluator(1, 3),
+        EmptyResponseEvaluator(),
+        JsonSchemaEvaluator(),
+        JsonSchemaEvaluator(SCHEMA),
+    ],
 )
 @pytest.mark.parametrize("output", [None, "", "x", '{"answer": "a"}', "not json"])
 def test_results_always_carry_score_or_outcome(evaluator, output) -> None:

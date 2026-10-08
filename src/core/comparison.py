@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from .metrics import AggregatedMetrics
 
@@ -16,10 +16,10 @@ from .metrics import AggregatedMetrics
 class MetricDelta:
     """Delta for a single metric. direction: 'lower_better' | 'higher_better'."""
 
-    baseline: Optional[float | Decimal]
-    candidate: Optional[float | Decimal]
-    delta: Optional[float | Decimal]
-    delta_percent: Optional[float]
+    baseline: float | Decimal | None
+    candidate: float | Decimal | None
+    delta: float | Decimal | None
+    delta_percent: float | None
     comparable: bool  # True if both values present and delta computed
 
 
@@ -37,15 +37,15 @@ class ComparisonResult:
     summary: list[str] = field(default_factory=list)
 
 
-def _decimal_to_float(d: Optional[Decimal | float]) -> Optional[float]:
+def _decimal_to_float(d: Decimal | float | None) -> float | None:
     if d is None:
         return None
     return float(d)
 
 
 def _compute_delta(
-    baseline: Optional[float | Decimal],
-    candidate: Optional[float | Decimal],
+    baseline: float | Decimal | None,
+    candidate: float | Decimal | None,
     lower_is_better: bool,
 ) -> MetricDelta:
     """
@@ -101,8 +101,9 @@ def _build_summary(result: ComparisonResult) -> list[str]:
         else:
             lines.append("Total cost: no change")
 
-    if result.average_evaluation_score.comparable and result.average_evaluation_score.delta is not None:
-        d = float(result.average_evaluation_score.delta)
+    score = result.average_evaluation_score
+    if score.comparable and score.delta is not None:
+        d = float(score.delta)
         if d > 0:
             lines.append(f"Eval score: candidate {d:.2f} higher (improvement)")
         elif d < 0:
@@ -112,7 +113,8 @@ def _build_summary(result: ComparisonResult) -> list[str]:
 
     if result.request_count_baseline != result.request_count_candidate:
         lines.append(
-            f"Request count differs: baseline={result.request_count_baseline}, candidate={result.request_count_candidate}"
+            f"Request count differs: baseline={result.request_count_baseline}, "
+            f"candidate={result.request_count_candidate}"
         )
 
     return lines
@@ -191,7 +193,7 @@ def comparison_to_dict(result: ComparisonResult) -> dict[str, Any]:
         return {
             "baseline": str(d.baseline) if isinstance(d.baseline, Decimal) else d.baseline,
             "candidate": str(d.candidate) if isinstance(d.candidate, Decimal) else d.candidate,
-            "delta": float(d.delta) if d.delta is not None and isinstance(d.delta, Decimal) else d.delta,
+            "delta": float(d.delta) if isinstance(d.delta, Decimal) else d.delta,
             "delta_percent": d.delta_percent,
             "comparable": d.comparable,
         }

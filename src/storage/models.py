@@ -8,7 +8,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -41,7 +41,7 @@ class LLMRequest(Base):
         nullable=False,
         server_default=func.now(),
     )
-    metadata_: Mapped[Optional[dict[str, Any]]] = mapped_column(
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
         "metadata",
         JSONB,
         nullable=True,
@@ -97,23 +97,23 @@ class LLMResponse(Base):
         nullable=False,
         unique=True,
     )
-    output_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    input_token_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    output_token_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    latency_ms: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
-    cost_usd: Mapped[Optional[Decimal]] = mapped_column(
+    output_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    input_token_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_token_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    latency_ms: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    cost_usd: Mapped[Decimal | None] = mapped_column(
         Numeric(18, 8),
         nullable=True,
     )
     status: Mapped[str] = mapped_column(String(64), nullable=False)
-    error_type: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    error_code: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    error_type: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
     )
-    metadata_: Mapped[Optional[dict[str, Any]]] = mapped_column(
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
         "metadata",
         JSONB,
         nullable=True,
@@ -158,10 +158,10 @@ class LLMEvaluation(Base):
         nullable=False,
     )
     criterion_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    criterion_version: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    score: Mapped[Optional[Decimal]] = mapped_column(Numeric(18, 6), nullable=True)
-    outcome: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    result_metadata: Mapped[Optional[dict[str, Any]]] = mapped_column(
+    criterion_version: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    score: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)
+    outcome: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    result_metadata: Mapped[dict[str, Any] | None] = mapped_column(
         JSONB,
         nullable=True,
     )

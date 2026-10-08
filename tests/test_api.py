@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -39,7 +39,7 @@ def log_body(**overrides) -> dict:
 
 
 def window() -> dict:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return {
         "start_time": (now - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "end_time": (now + timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -135,9 +135,8 @@ def test_metrics_filters_by_version(client: TestClient) -> None:
 
 
 def test_metrics_on_empty_range(client: TestClient) -> None:
-    res = client.get(
-        "/metrics", params={"start_time": "2020-01-01T00:00:00Z", "end_time": "2020-01-02T00:00:00Z"}
-    )
+    params = {"start_time": "2020-01-01T00:00:00Z", "end_time": "2020-01-02T00:00:00Z"}
+    res = client.get("/metrics", params=params)
     assert res.status_code == 200
     body = res.json()
     assert body["request_count"] == 0
@@ -145,15 +144,15 @@ def test_metrics_on_empty_range(client: TestClient) -> None:
 
 
 def test_metrics_rejects_bad_datetime(client: TestClient) -> None:
-    res = client.get("/metrics", params={"start_time": "yesterday", "end_time": "2026-01-01T00:00:00Z"})
+    params = {"start_time": "yesterday", "end_time": "2026-01-01T00:00:00Z"}
+    res = client.get("/metrics", params=params)
     assert res.status_code == 400
     assert res.json()["detail"]["error"] == "invalid_datetime"
 
 
 def test_metrics_rejects_reversed_range(client: TestClient) -> None:
-    res = client.get(
-        "/metrics", params={"start_time": "2026-02-01T00:00:00Z", "end_time": "2026-01-01T00:00:00Z"}
-    )
+    params = {"start_time": "2026-02-01T00:00:00Z", "end_time": "2026-01-01T00:00:00Z"}
+    res = client.get("/metrics", params=params)
     assert res.status_code == 400
     assert res.json()["detail"]["error"] == "invalid_range"
 

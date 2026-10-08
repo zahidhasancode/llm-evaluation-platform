@@ -6,7 +6,7 @@ Uses a strict prompt and rubric to score relevance, completeness, format adheren
 from __future__ import annotations
 
 import json
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
 from .base import EvaluationInput, EvaluationResult, Evaluator
 
@@ -51,7 +51,7 @@ Return only valid JSON, no other text:
   "completeness": {{"score": <0-5>, "explanation": "<one sentence>"}},
   "format_adherence": {{"score": <0-5>, "explanation": "<one sentence or N/A>"}}
 }}
-"""
+"""  # noqa: E501
 
 
 def _build_prompt(inp: EvaluationInput) -> str:
@@ -60,7 +60,7 @@ def _build_prompt(inp: EvaluationInput) -> str:
     return JUDGE_PROMPT.format(input_text=input_text, output_text=output_text)
 
 
-def _parse_response(text: str) -> Optional[dict[str, Any]]:
+def _parse_response(text: str) -> dict[str, Any] | None:
     """Parse JSON from response. Returns None on failure."""
     text = text.strip()
     # Handle markdown code blocks
@@ -94,7 +94,7 @@ def _is_not_applicable(score: Any) -> bool:
     return score is None or (isinstance(score, str) and score.strip().upper() == "N/A")
 
 
-def _validate_scores(data: dict[str, Any]) -> Optional[tuple[float, dict[str, Any]]]:
+def _validate_scores(data: dict[str, Any]) -> tuple[float, dict[str, Any]] | None:
     """
     Validate parsed data and extract scores. Returns (overall_score, details) or None.
     Overall score is average of criteria (0-5 scale).

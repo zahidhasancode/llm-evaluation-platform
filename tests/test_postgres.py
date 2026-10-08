@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -59,7 +59,7 @@ def test_sql_aggregate_matches_python_aggregation(pg_session: Session) -> None:
         )
     pg_session.commit()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     window = {"start_time": now - timedelta(hours=1), "end_time": now + timedelta(hours=1)}
 
     sql = aggregate_metrics(pg_session, **window)

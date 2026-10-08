@@ -43,7 +43,9 @@ INPUT = EvaluationInput(input_text="Summarise the report", output_text="The repo
 
 def test_valid_judgement_is_averaged_and_costed() -> None:
     client = FakeClient(rubric(5, 4, 3), input_tokens=1000, output_tokens=500)
-    judge = LLMJudgeEvaluator(client, input_cost_per_1k=0.01, output_cost_per_1k=0.03, max_tokens=256)
+    judge = LLMJudgeEvaluator(
+        client, input_cost_per_1k=0.01, output_cost_per_1k=0.03, max_tokens=256
+    )
 
     result = judge.evaluate(INPUT)
 

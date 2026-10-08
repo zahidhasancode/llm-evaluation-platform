@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -24,8 +24,8 @@ class EvaluationInput:
 
     input_text: str
     output_text: str
-    expected_output: Optional[str] = None
-    metadata: Optional[dict[str, Any]] = None
+    expected_output: str | None = None
+    metadata: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -36,9 +36,9 @@ class EvaluationResult:
     Contract: at least one of score or outcome must be set.
     """
 
-    score: Optional[float] = None
-    outcome: Optional[str] = None
-    details: Optional[dict[str, Any]] = None
+    score: float | None = None
+    outcome: str | None = None
+    details: dict[str, Any] | None = None
 
 
 class Evaluator(ABC):

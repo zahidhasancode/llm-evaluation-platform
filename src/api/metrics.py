@@ -6,7 +6,6 @@ Returns aggregated metrics for request-response data in a time range.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -42,7 +41,9 @@ def _parse_datetime(v: str | datetime) -> datetime:
         try:
             return datetime.fromisoformat(s)
         except ValueError:
-            raise ValueError("Invalid datetime format. Use ISO 8601 (e.g. 2024-01-15T00:00:00Z).")
+            raise ValueError(
+                "Invalid datetime format. Use ISO 8601 (e.g. 2024-01-15T00:00:00Z)."
+            ) from None
     raise ValueError("Expected datetime or ISO 8601 string")
 
 
@@ -56,19 +57,19 @@ class MetricsResponse(BaseModel):
 
     request_count: int
     error_count: int
-    average_latency_ms: Optional[float]
-    p95_latency_ms: Optional[float]
-    p99_latency_ms: Optional[float]
+    average_latency_ms: float | None
+    p95_latency_ms: float | None
+    p99_latency_ms: float | None
     total_cost_usd: str
-    average_cost_usd: Optional[float]
-    average_evaluation_score: Optional[float]
+    average_cost_usd: float | None
+    average_evaluation_score: float | None
 
 
 class ErrorDetail(BaseModel):
     """Error response body."""
 
     error: str
-    detail: Optional[str] = None
+    detail: str | None = None
 
 
 # -----------------------------------------------------------------------------
@@ -87,10 +88,10 @@ class ErrorDetail(BaseModel):
 def get_metrics(
     start_time: str = Query(..., description="ISO 8601 datetime, inclusive start"),
     end_time: str = Query(..., description="ISO 8601 datetime, inclusive end"),
-    model_name: Optional[str] = Query(None, max_length=255),
-    model_version: Optional[str] = Query(None, max_length=128),
-    prompt_name: Optional[str] = Query(None, max_length=255),
-    prompt_version: Optional[str] = Query(None, max_length=128),
+    model_name: str | None = Query(None, max_length=255),
+    model_version: str | None = Query(None, max_length=128),
+    prompt_name: str | None = Query(None, max_length=255),
+    prompt_version: str | None = Query(None, max_length=128),
     db: Session = Depends(get_db),
 ) -> MetricsResponse:
     """

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -20,7 +20,7 @@ from storage.repository import (
     insert_llm_response,
 )
 
-T0 = datetime(2026, 3, 1, 12, 0, tzinfo=timezone.utc)
+T0 = datetime(2026, 3, 1, 12, 0, tzinfo=UTC)
 
 
 def add_pair(
@@ -197,9 +197,12 @@ def test_fetch_evaluations_for_responses(session: Session) -> None:
     insert_evaluation_results(
         session,
         results=[
-            {"response_id": wanted.id, "evaluation_run_id": run_id, "criterion_name": "a", "score": 1},
-            {"response_id": wanted.id, "evaluation_run_id": run_id, "criterion_name": "b", "outcome": "fail"},
-            {"response_id": other.id, "evaluation_run_id": run_id, "criterion_name": "a", "score": 0},
+            {"response_id": wanted.id, "evaluation_run_id": run_id,
+             "criterion_name": "a", "score": 1},
+            {"response_id": wanted.id, "evaluation_run_id": run_id,
+             "criterion_name": "b", "outcome": "fail"},
+            {"response_id": other.id, "evaluation_run_id": run_id,
+             "criterion_name": "a", "score": 0},
         ],
     )
     session.commit()

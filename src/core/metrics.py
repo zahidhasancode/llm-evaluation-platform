@@ -5,9 +5,10 @@ Pure functions that compute aggregates from repository query results.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Optional, Sequence
+from typing import Any
 
 # -----------------------------------------------------------------------------
 # Input structures (can be built from repository results)
@@ -28,8 +29,8 @@ class RequestResponseRecord:
     model_version: str
     application_id: str
     created_at: Any  # datetime
-    latency_ms: Optional[int]
-    cost_usd: Optional[Decimal]
+    latency_ms: int | None
+    cost_usd: Decimal | None
     status: str
 
 
@@ -38,8 +39,8 @@ class EvaluationRecord:
     """Single evaluation result for score aggregation."""
 
     response_id: str
-    score: Optional[float]
-    outcome: Optional[str] = None
+    score: float | None
+    outcome: str | None = None
 
 
 def records_from_request_response_pairs(
@@ -94,12 +95,12 @@ class AggregatedMetrics:
 
     request_count: int = 0
     error_count: int = 0
-    average_latency_ms: Optional[float] = None
-    p95_latency_ms: Optional[float] = None
-    p99_latency_ms: Optional[float] = None
+    average_latency_ms: float | None = None
+    p95_latency_ms: float | None = None
+    p99_latency_ms: float | None = None
     total_cost_usd: Decimal = field(default_factory=lambda: Decimal("0"))
-    average_cost_usd: Optional[float] = None
-    average_evaluation_score: Optional[float] = None
+    average_cost_usd: float | None = None
+    average_evaluation_score: float | None = None
 
 
 # -----------------------------------------------------------------------------
@@ -107,7 +108,7 @@ class AggregatedMetrics:
 # -----------------------------------------------------------------------------
 
 
-def _percentile(sorted_values: list[float], p: float) -> Optional[float]:
+def _percentile(sorted_values: list[float], p: float) -> float | None:
     """Compute percentile from sorted list. p in [0, 1]. Returns None if empty."""
     if not sorted_values:
         return None
@@ -121,7 +122,7 @@ def _percentile(sorted_values: list[float], p: float) -> Optional[float]:
     return sorted_values[lo] + frac * (sorted_values[hi] - sorted_values[lo])
 
 
-def _decimal_to_float(d: Optional[Decimal]) -> Optional[float]:
+def _decimal_to_float(d: Decimal | None) -> float | None:
     """Convert Decimal to float for aggregation. Returns None if input is None."""
     if d is None:
         return None
@@ -130,7 +131,7 @@ def _decimal_to_float(d: Optional[Decimal]) -> Optional[float]:
 
 def compute_metrics(
     records: Sequence[RequestResponseRecord],
-    evaluations: Optional[Sequence[EvaluationRecord]] = None,
+    evaluations: Sequence[EvaluationRecord] | None = None,
 ) -> AggregatedMetrics:
     """
     Compute aggregated metrics from request-response records.
@@ -151,9 +152,9 @@ def compute_metrics(
     latency_values = [int(v) for v in latency_values]
     latency_values.sort()
 
-    average_latency_ms: Optional[float] = None
-    p95_latency_ms: Optional[float] = None
-    p99_latency_ms: Optional[float] = None
+    average_latency_ms: float | None = None
+    p95_latency_ms: float | None = None
+    p99_latency_ms: float | None = None
     if latency_values:
         average_latency_ms = sum(latency_values) / len(latency_values)
         p95_latency_ms = _percentile(latency_values, 0.95)
@@ -164,12 +165,12 @@ def compute_metrics(
     total_cost_usd = sum(
         (r.cost_usd if r.cost_usd is not None else Decimal("0")) for r in records
     )
-    average_cost_usd: Optional[float] = None
+    average_cost_usd: float | None = None
     if cost_values:
         average_cost_usd = sum(cost_values) / len(cost_values)
 
     # Evaluation score: average over records with numeric score
-    average_evaluation_score: Optional[float] = None
+    average_evaluation_score: float | None = None
     if evaluations:
         response_ids = {r.response_id for r in records}
         eval_by_response: dict[str, list[float]] = {}
@@ -195,7 +196,7 @@ def compute_metrics(
 def compute_metrics_grouped(
     records: Sequence[RequestResponseRecord],
     group_by: Sequence[str],
-    evaluations: Optional[Sequence[EvaluationRecord]] = None,
+    evaluations: Sequence[EvaluationRecord] | None = None,
 ) -> dict[tuple[str, ...], AggregatedMetrics]:
     """
     Compute metrics grouped by dimension values.

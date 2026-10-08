@@ -52,7 +52,11 @@ def test_better_candidate_is_reported_as_improvement() -> None:
 def test_worse_candidate_is_reported_as_regression() -> None:
     result = compare_model_versions(
         metrics(),
-        metrics(average_latency_ms=1500.0, total_cost_usd=Decimal("2.00"), average_evaluation_score=0.5),
+        metrics(
+            average_latency_ms=1500.0,
+            total_cost_usd=Decimal("2.00"),
+            average_evaluation_score=0.5,
+        ),
     )
     assert result.comparison_type == "model_version"
     assert result.summary == [
@@ -64,7 +68,11 @@ def test_worse_candidate_is_reported_as_regression() -> None:
 
 def test_identical_metrics_report_no_change() -> None:
     result = compare_metrics(metrics(), metrics())
-    assert result.summary == ["Latency: no change", "Total cost: no change", "Eval score: no change"]
+    assert result.summary == [
+        "Latency: no change",
+        "Total cost: no change",
+        "Eval score: no change",
+    ]
     assert result.average_latency_ms.delta_percent == 0
 
 

@@ -6,8 +6,9 @@ Accepts LLM request and response data, validates, and persists via repository.
 from __future__ import annotations
 
 import os
+from collections.abc import Generator
 from decimal import Decimal
-from typing import Any, Generator, Literal
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field

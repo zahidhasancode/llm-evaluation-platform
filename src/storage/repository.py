@@ -8,7 +8,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -47,7 +47,7 @@ def insert_llm_request(
     model_version: str,
     application_id: str,
     input_text: str,
-    metadata_: Optional[dict[str, Any]] = None,
+    metadata_: dict[str, Any] | None = None,
 ) -> LLMRequest:
     """
     Insert an LLM request record.
@@ -93,15 +93,15 @@ def insert_llm_response(
     session: Session,
     *,
     request_id: uuid.UUID | str,
-    output_text: Optional[str] = None,
-    input_token_count: Optional[int] = None,
-    output_token_count: Optional[int] = None,
-    latency_ms: Optional[int] = None,
-    cost_usd: Optional[Decimal] = None,
+    output_text: str | None = None,
+    input_token_count: int | None = None,
+    output_token_count: int | None = None,
+    latency_ms: int | None = None,
+    cost_usd: Decimal | None = None,
     status: str,
-    error_type: Optional[str] = None,
-    error_code: Optional[str] = None,
-    metadata_: Optional[dict[str, Any]] = None,
+    error_type: str | None = None,
+    error_code: str | None = None,
+    metadata_: dict[str, Any] | None = None,
 ) -> LLMResponse:
     """
     Insert an LLM response record linked to a request.
@@ -205,11 +205,11 @@ def fetch_requests_and_responses_by_time_range(
     *,
     start_time: datetime,
     end_time: datetime,
-    application_id: Optional[str] = None,
-    prompt_name: Optional[str] = None,
-    prompt_version: Optional[str] = None,
-    model_name: Optional[str] = None,
-    model_version: Optional[str] = None,
+    application_id: str | None = None,
+    prompt_name: str | None = None,
+    prompt_version: str | None = None,
+    model_name: str | None = None,
+    model_version: str | None = None,
 ) -> list[tuple[LLMRequest, LLMResponse]]:
     """
     Fetch request-response pairs within a time range.
@@ -291,11 +291,11 @@ def aggregate_metrics(
     *,
     start_time: datetime,
     end_time: datetime,
-    application_id: Optional[str] = None,
-    prompt_name: Optional[str] = None,
-    prompt_version: Optional[str] = None,
-    model_name: Optional[str] = None,
-    model_version: Optional[str] = None,
+    application_id: str | None = None,
+    prompt_name: str | None = None,
+    prompt_version: str | None = None,
+    model_name: str | None = None,
+    model_version: str | None = None,
 ) -> dict[str, Any]:
     """
     Aggregate basic metrics: avg latency, p95 latency, total cost.
@@ -351,7 +351,9 @@ def aggregate_metrics(
         return {
             "avg_latency_ms": row.avg_latency_ms,
             "p95_latency_ms": row.p95_latency_ms,
-            "total_cost_usd": row.total_cost_usd if row.total_cost_usd is not None else Decimal("0"),
+            "total_cost_usd": (
+                row.total_cost_usd if row.total_cost_usd is not None else Decimal("0")
+            ),
         }
     except SQLAlchemyError as e:
         raise RepositoryError("Aggregate failed: database error") from e

@@ -6,7 +6,7 @@ Deterministic, no external calls.
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any
 
 from .base import EvaluationInput, EvaluationResult, Evaluator
 
@@ -25,8 +25,8 @@ class LengthEvaluator(Evaluator):
 
     def __init__(
         self,
-        min_length: Optional[int] = None,
-        max_length: Optional[int] = None,
+        min_length: int | None = None,
+        max_length: int | None = None,
     ) -> None:
         if min_length is not None and min_length < 0:
             raise ValueError("min_length must be non-negative")
@@ -120,16 +120,16 @@ class JsonSchemaEvaluator(Evaluator):
     conforms to that schema. Score 1.0 if valid, 0.0 otherwise.
     """
 
-    def __init__(self, schema: Optional[dict[str, Any]] = None) -> None:
+    def __init__(self, schema: dict[str, Any] | None = None) -> None:
         self._schema = schema
         if schema is not None:
             try:
                 import jsonschema
-            except ImportError:
+            except ImportError as e:
                 raise ImportError(
                     "jsonschema is required for schema validation. "
                     "Install with: pip install jsonschema"
-                )
+                ) from e
             try:
                 jsonschema.Draft7Validator.check_schema(schema)
             except jsonschema.SchemaError as e:
