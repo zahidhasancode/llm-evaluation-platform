@@ -1,0 +1,6 @@
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = [
+    "postgres: needs a PostgreSQL database in TEST_POSTGRES_URL (skipped otherwise)",
+]
