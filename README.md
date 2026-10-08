@@ -220,3 +220,7 @@ Python 3.11, FastAPI, Pydantic 2, SQLAlchemy 2.1, PostgreSQL (psycopg 3), jsonsc
 | `docs/DEPLOYMENT.md` | Deployment notes for the target design |
 | `docs/LIMITATIONS.md`, `docs/FUTURE_WORK.md` | Known gaps and ideas |
 | `docs/SUCCESS_METRICS.md` | How success would be measured |
+
+## Licence
+
+MIT. See `LICENSE`.
