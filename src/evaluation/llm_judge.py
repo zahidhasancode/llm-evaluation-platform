@@ -87,10 +87,21 @@ def _estimate_cost(
     return f"{cost:.8f}"
 
 
+_OPTIONAL_CRITERIA = frozenset({"format_adherence"})
+
+
+def _is_not_applicable(score: Any) -> bool:
+    return score is None or (isinstance(score, str) and score.strip().upper() == "N/A")
+
+
 def _validate_scores(data: dict[str, Any]) -> Optional[tuple[float, dict[str, Any]]]:
     """
     Validate parsed data and extract scores. Returns (overall_score, details) or None.
     Overall score is average of criteria (0-5 scale).
+
+    The rubric allows format_adherence to be N/A when the input specifies no
+    format. A score of "N/A" or null for that criterion is recorded as None and
+    left out of the average.
     """
     criteria = ("relevance", "completeness", "format_adherence")
     scores = []
@@ -102,7 +113,11 @@ def _validate_scores(data: dict[str, Any]) -> Optional[tuple[float, dict[str, An
             return None
         s = val.get("score")
         exp = val.get("explanation", "")
-        if not isinstance(s, (int, float)) or not (0 <= s <= 5):
+        if c in _OPTIONAL_CRITERIA and _is_not_applicable(s):
+            details[c] = {"score": None, "explanation": str(exp)[:200]}
+            continue
+        # bool is a subclass of int; true/false is not a rubric score.
+        if isinstance(s, bool) or not isinstance(s, (int, float)) or not (0 <= s <= 5):
             return None
         scores.append(float(s))
         details[c] = {"score": s, "explanation": str(exp)[:200]}

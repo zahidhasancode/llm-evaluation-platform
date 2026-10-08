@@ -124,3 +124,34 @@ def test_explanations_are_truncated() -> None:
     )
     result = LLMJudgeEvaluator(FakeClient(reply)).evaluate(INPUT)
     assert len(result.details["criteria"]["relevance"]["explanation"]) == 200
+
+
+@pytest.mark.parametrize("na_score", ["N/A", "n/a", None])
+def test_format_adherence_not_applicable_is_left_out_of_average(na_score) -> None:
+    # The rubric tells the judge to answer N/A when the input asks for no format.
+    reply = json.dumps(
+        {
+            "relevance": {"score": 5, "explanation": "on topic"},
+            "completeness": {"score": 3, "explanation": "partial"},
+            "format_adherence": {"score": na_score, "explanation": "N/A"},
+        }
+    )
+    result = LLMJudgeEvaluator(FakeClient(reply)).evaluate(INPUT)
+    assert result.outcome == "pass"
+    assert result.score == pytest.approx(4.0)
+    assert result.details["criteria"]["format_adherence"]["score"] is None
+
+
+@pytest.mark.parametrize("criterion", ["relevance", "completeness"])
+def test_only_format_adherence_may_be_not_applicable(criterion: str) -> None:
+    data = json.loads(rubric())
+    data[criterion]["score"] = "N/A"
+    result = LLMJudgeEvaluator(FakeClient(json.dumps(data))).evaluate(INPUT)
+    assert result.details["error"] == "invalid_schema"
+
+
+def test_boolean_scores_are_rejected() -> None:
+    data = json.loads(rubric())
+    data["relevance"]["score"] = True
+    result = LLMJudgeEvaluator(FakeClient(json.dumps(data))).evaluate(INPUT)
+    assert result.details["error"] == "invalid_schema"
