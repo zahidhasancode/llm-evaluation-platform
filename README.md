@@ -189,7 +189,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs `ruff check .` and `pytest` on 
 - When the judge call fails or its reply cannot be parsed, the result is `score=0.0, outcome="fail"`. If you store that as a score, it lowers the average quality score.
 - Without `DATABASE_URL`, the API starts but every request returns 500.
 - In SQLite (tests only) timestamps are stored without a time zone.
-- Several files in `docs/` were written as a design for a bigger system. They describe components that do not exist yet, and `API_CONTRACTS.md`, `EVALUATION_STRATEGY.md` and `EXECUTION_PLAN.md` are empty stubs.
+- Several files in `docs/` were written as a design for a bigger system. They describe components that do not exist yet and are marked as design documents.
 
 ## Planned
 

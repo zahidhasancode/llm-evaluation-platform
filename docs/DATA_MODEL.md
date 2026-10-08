@@ -1,7 +1,7 @@
 -- =============================================================================
 -- LLM Evaluation & Monitoring Platform - PostgreSQL Schema
 -- =============================================================================
--- Internal production platform. Tracks LLM requests, responses, and evaluation
+-- Personal prototype. Tracks LLM requests, responses, and evaluation
 -- results. Supports version-based and time-based querying for metrics and lineage.
 -- =============================================================================
 

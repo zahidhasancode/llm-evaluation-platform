@@ -1,5 +1,7 @@
 # Deployment
 
+> **Design document.** This describes the intended system. Several parts (workers, evaluation runs, version registry, lineage, health checks) are planned and not built yet; see the Status table in the README.
+
 This document describes how to deploy the LLM Evaluation & Monitoring Platform. It covers system requirements, configuration, database setup, running the API and workers, and rollback.
 
 ---

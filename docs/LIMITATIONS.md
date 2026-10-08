@@ -9,7 +9,7 @@ Honest constraints of the current system. This document is for engineers evaluat
 - **Evaluation run orchestration.** Submission, queue, and workers for evaluation runs are designed but not implemented. Evaluation logic (rule-based, LLM judge) exists; the pipeline to run it at scale does not.
 - **Dataset store.** No API or storage for versioned evaluation datasets. Users cannot create or reference datasets via the platform.
 - **Version registry.** Prompt and model versions are passed inline with requests. There is no separate registry or validation that versions exist before ingestion.
-- **Lineage API.** The repository supports lineage lookup; there is no dedicated GET endpoint for it. Users must query the database or add one.
+- **Lineage.** Not built yet. Requests store their prompt and model version IDs, but there is no lineage lookup in the repository code and no API endpoint for it.
 - **Rollup producer.** Metrics are computed on-demand. No precomputed rollups for large time windows. Large queries may be slow.
 - **Health endpoints.** Liveness and readiness are documented but not implemented. Add them for orchestration.
 

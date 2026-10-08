@@ -1,5 +1,7 @@
 # System Design
 
+> **Design document.** This describes the intended system. Several parts (workers, evaluation runs, version registry, lineage, health checks) are planned and not built yet; see the Status table in the README.
+
 ## 1. Overview
 
 ### Purpose
